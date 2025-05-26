@@ -3,7 +3,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { prompt, authorization } = req.body;
+  const { prompt } = req.body;
+  const authorization = process.env.GOOGLE_IMAGEFX_KEY; // agora usa variável do Vercel
 
   if (!prompt || !authorization) {
     return res.status(400).json({ error: 'Prompt e token são obrigatórios.' });
@@ -26,6 +27,9 @@ export default async function handler(req, res) {
     const result = await response.json();
     res.status(200).json(result);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao gerar imagem', detail: err.message });
+    res.status(500).json({
+      error: "Erro ao gerar imagem",
+      detail: err.message,
+    });
   }
 }
