@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   const { prompt } = req.body;
-  const authorization = process.env.GOOGLE_IMAGEFX_KEY; // agora usa variável do Vercel
+  const authorization = process.env.GOOGLE_IMAGEFX_KEY;
 
   if (!prompt || !authorization) {
     return res.status(400).json({ error: 'Prompt e token são obrigatórios.' });
@@ -24,11 +24,27 @@ export default async function handler(req, res) {
       }),
     });
 
-    const result = await response.json();
-    res.status(200).json(result);
+    // Recebe a resposta como texto (mesmo que venha com erro HTML)
+    const raw = await response.text();
+
+    // Faz log para identificar o problema
+    console.error('[ImageFX API Response Raw]:', raw);
+
+    // Tenta parsear o JSON, se possível
+    try {
+      const json = JSON.parse(raw);
+      return res.status(200).json(json);
+    } catch (parseErr) {
+      return res.status(500).json({
+        error: "Erro ao gerar imagem",
+        detail: "Resposta não é um JSON válido. Conteúdo bruto:",
+        content: raw
+      });
+    }
+
   } catch (err) {
-    res.status(500).json({
-      error: "Erro ao gerar imagem",
+    return res.status(500).json({
+      error: "Erro ao gerar imagem (fetch)",
       detail: err.message,
     });
   }
